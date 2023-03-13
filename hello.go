@@ -270,10 +270,10 @@ func drawStraightHair(gc *draw2dimg.GraphicContext, rnd *rand.Rand) {
 }
 
 func postToMastadon() {
-    mastodonServer := os.GetEnv("MASTODON_SERVER")
-    clientKey := os.GetEnv("CLIENT_KEY")
-    clientSecret := os.GetEnv("CLIENT_SECRET")
-    accessToken := os.GetEnv("ACCESS_TOKEN")
+    mastodonServer := os.Getenv("MASTODON_SERVER")
+    clientKey := os.Getenv("CLIENT_KEY")
+    clientSecret := os.Getenv("CLIENT_SECRET")
+    accessToken := os.Getenv("ACCESS_TOKEN")
 
     client := mastodon.NewClient(
         &mastodon.Config{
