@@ -1,15 +1,24 @@
 package main
 
 import (
+    "context"
     "github.com/llgcode/draw2d/draw2dimg"
     "github.com/llgcode/draw2d/draw2dkit"
+    "github.com/mattn/go-mastodon"
     "image"
     "image/color"
+    "log"
     "math/rand"
+    "os"
     "time"
 )
 
 func main() {
+    generatePng()
+    postToMastadon()
+}
+
+func generatePng() {
     seed := time.Now().UnixNano()
     randSource := rand.NewSource(seed)
     rnd := rand.New(randSource)
@@ -21,7 +30,7 @@ func main() {
     draw(gc, rnd);
 
     // Save to file
-    draw2dimg.SaveToPngFile("hello.png", dest)
+    draw2dimg.SaveToPngFile("sillyface.png", dest) 
 }
 
 func draw(gc *draw2dimg.GraphicContext, rnd *rand.Rand) {
@@ -258,4 +267,43 @@ func drawStraightHair(gc *draw2dimg.GraphicContext, rnd *rand.Rand) {
 
         length += deltaLength
     }
+}
+
+func postToMastadon() {
+    mastodonServer := os.GetEnv("MASTODON_SERVER")
+    clientKey := os.GetEnv("CLIENT_KEY")
+    clientSecret := os.GetEnv("CLIENT_SECRET")
+    accessToken := os.GetEnv("ACCESS_TOKEN")
+
+    client := mastodon.NewClient(
+        &mastodon.Config{
+            Server:       mastodonServer,
+            ClientID:     clientKey,
+            ClientSecret: clientSecret,
+            AccessToken:  accessToken,
+    })
+
+    file, err := os.Open("sillyface.png")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    media := mastodon.Media{File: file, Description: "Silly Face"}
+    attachment, err := client.UploadMediaFromMedia(context.Background(), &media)
+
+    var attachmentIDs []mastodon.ID
+    attachmentIDs = append(attachmentIDs, attachment.ID)
+
+    toot := mastodon.Toot{
+        Status:   "",
+        MediaIDs: attachmentIDs,
+    }
+
+    status, err := client.PostStatus(context.Background(), &toot)
+
+    if err != nil {
+        log.Fatalf("%#v\n", err)
+    }
+
+    log.Print(status)
 }
